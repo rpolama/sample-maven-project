@@ -1,0 +1,49 @@
+name: CIRename
+
+on:
+  push:
+    branches: ['project/devops']
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      
+      - name: Setup JDK 11 for Sonar Cloud
+        uses: actions/setup-java@v1
+        with:
+            java-version: 11
+      
+      - name: Maven Build
+        run: mvn clean install -DskipTests=true
+
+      - name: Run JUnit Tests
+        run: mvn test -Dmaven.test.failure.ignore=true surefire-report:report
+        
+      - name: Veracode Upload And Scan
+        uses: veracode/veracode-uploadandscan-action@0.2.4
+        with:
+          appname: 'GitHub Vera POC'
+          createprofile: false
+          filepath: 'app/target/sample-maven-project.war'
+          vid: '${{ secrets.VERA_API_ID }}'
+          vkey: '${{ secrets.VERA_API_KEY }}'
+
+      
+  deploy:
+    needs: build
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo Run deployment.
+        
+  test:
+    needs: deploy
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo Run deployment.
