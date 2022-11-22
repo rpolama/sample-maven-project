@@ -1,4 +1,4 @@
-name: CIRename
+name: cicd
 
 on:
   push:
